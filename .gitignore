@@ -1,0 +1,251 @@
+# ============================================================================
+# Python
+# ============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ============================================================================
+# 项目特定 - 敏感配置
+# ============================================================================
+# 配置文件（包含敏感信息）
+questionExtract/config.py
+backend/app/config/
+*.env
+.env
+.env.local
+.env.*.local
+config.local.py
+
+# ============================================================================
+# 数据库文件
+# ============================================================================
+# ChromaDB 向量数据库
+backend/chroma_db/
+**/chroma_db/
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL 转储文件
+*.sql
+!**/db_schema.sql
+!**/db_*.sql
+
+# ============================================================================
+# 日志文件
+# ============================================================================
+*.log
+logs/
+*.log.*
+log/
+
+# ============================================================================
+# IDE 和编辑器
+# ============================================================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ============================================================================
+# 操作系统文件
+# ============================================================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# 临时文件和缓存
+# ============================================================================
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.nul
+
+# 缓存
+.cache/
+*.cache
+
+# ============================================================================
+# 构建和部署
+# ============================================================================
+# 构建产物
+dist/
+build/
+*.whl
+*.tar.gz
+
+# 部署相关
+.deploy/
+deploy/
+
+# ============================================================================
+# 前端构建产物（如果有）
+# ============================================================================
+web/dist/
+web/build/
+web/node_modules/
+web/.next/
+web/.nuxt/
+web/.vuepress/dist/
+web/.serverless/
+web/.cache/
+
+# ============================================================================
+# 文档生成
+# ============================================================================
+docs/_build/
+site/
+
+# ============================================================================
+# 其他
+# ============================================================================
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# 备份文件
+*.backup
+*.old
+
