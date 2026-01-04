@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面试题练习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Markdown渲染库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+
+        /* Line clamp utility */
+        .line-clamp-10 {
+            display: -webkit-box;
+            -webkit-line-clamp: 10;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Markdown内容样式 */
+        .prose {
+            color: #374151;
+            max-width: none;
+        }
+        .prose h1 { font-size: 2em; font-weight: bold; margin-top: 0.67em; margin-bottom: 0.67em; }
+        .prose h2 { font-size: 1.5em; font-weight: bold; margin-top: 0.83em; margin-bottom: 0.83em; }
+        .prose h3 { font-size: 1.17em; font-weight: bold; margin-top: 1em; margin-bottom: 1em; }
+        .prose p { margin: 1em 0; line-height: 1.6; }
+        .prose ul, .prose ol { margin: 1em 0; padding-left: 2em; }
+        .prose li { margin: 0.5em 0; }
+        .prose code { background-color: #f3f4f6; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        .prose pre { background-color: #1f2937; color: #f3f4f6; padding: 1em; border-radius: 0.375rem; overflow-x: auto; margin: 1em 0; }
+        .prose pre code { background: none; padding: 0; }
+        .prose blockquote { border-left: 4px solid #d1d5db; padding-left: 1em; margin: 1em 0; color: #6b7280; }
+        .prose a { color: #2563eb; text-decoration: underline; }
+        .prose strong { font-weight: bold; }
+        .prose em { font-style: italic; }
+        .prose table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        .prose th, .prose td { border: 1px solid #d1d5db; padding: 0.5em; text-align: left; }
+        .prose th { background-color: #f3f4f6; font-weight: bold; }
+
+        /* 面试日程滚动动画 */
+        .interview-scroll {
+            overflow: hidden;
+            width: 100%;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .animate-scroll {
+            display: flex;
+            animation: scroll 30s linear infinite;
+        }
+
+        .animate-scroll:hover {
+            animation-play-state: paused;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div x-data="app()" x-init="init()" class="min-h-screen">
+        <!-- 顶部导航 -->
+        <nav class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-gray-900">🎯 面试题练习系统</h1>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button @click="currentTab = 'practice'"
+                                :class="currentTab === 'practice' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            练习模式
+                        </button>
+                        <button @click="currentTab = 'chatbot'"
+                                :class="currentTab === 'chatbot' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            🤖 AI助手
+                        </button>
+                        <button @click="currentTab = 'notes'"
+                                :class="currentTab === 'notes' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            📝 笔记
+                        </button>
+                        <button @click="currentTab = 'schedules'"
+                                :class="currentTab === 'schedules' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            📅 面试日程
+                        </button>
+                        <button @click="currentTab = 'job-analysis'"
+                                :class="currentTab === 'job-analysis' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            💼 岗位分析
+                        </button>
+                        <button @click="window.open('https://www.overleaf.com/', '_blank')"
+                                class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100">
+                            📄 简历
+                        </button>
+                        <button @click="currentTab = 'source'"
+                                :class="currentTab === 'source' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            原始问题
+                        </button>
+                        <button @click="currentTab = 'questions'"
+                                :class="currentTab === 'questions' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'"
+                                class="px-3 py-2 rounded-md text-sm font-medium">
+                            明细问题
+                        </button>
+                        <button @click="showSettings = true"
+                                class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100">
+                            ⚙️ 设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <!-- 练习模式 -->
+            <div x-show="currentTab === 'practice'" x-cloak>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- 统计卡片 -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-sm font-medium text-gray-500">总问题数</h3>
+                        <p class="mt-2 text-3xl font-bold text-gray-900" x-text="stats.total_questions"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-sm font-medium text-gray-500">已练习</h3>
+                        <p class="mt-2 text-3xl font-bold text-blue-600" x-text="stats.practiced_questions"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-sm font-medium text-gray-500">已掌握</h3>
+                        <p class="mt-2 text-3xl font-bold text-green-600" x-text="stats.mastery_stats?.['会了'] || 0"></p>
+                    </div>
+                </div>
+
+                <!-- 面试日程滚动提醒 -->
+                <div x-show="upcomingInterviews.length > 0" class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-lg shadow p-4 mb-6 overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-yellow-800">📅 未来7天面试提醒</h3>
+                        <button @click="currentTab = 'schedules'" class="text-xs text-yellow-700 hover:underline">查看全部</button>
+                    </div>
+                    <div class="interview-scroll">
+                        <div class="flex space-x-4 animate-scroll">
+                            <template x-for="(interview, idx) in (upcomingInterviews || []).concat(upcomingInterviews || [])" :key="'scroll-' + interview.id + '-' + idx">
+                                <div class="flex-shrink-0 bg-white rounded-md p-3 border border-yellow-200 min-w-[300px]">
+                                    <p class="font-medium text-gray-900 text-sm" x-text="interview.company_name + ' - ' + interview.position_name"></p>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        🕒 <span x-text="new Date(interview.interview_time).toLocaleString()"></span>
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 筛选选项 -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-lg font-semibold mb-4">筛选条件</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">领域</label>
+                            <select x-model="practiceFilter.domain" class="w-full border rounded-md px-3 py-2">
+                                <option value="">全部领域</option>
+                                <option>大模型</option>
+                                <option>RAG</option>
+                                <option>记忆管理</option>
+                                <option>Langchain语法</option>
+                                <option>智能体框架</option>
+                                <option>效果评测</option>
+                                <option>工程化部署实践</option>
+                                <option>其他</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">掌握程度</label>
+                            <select x-model="practiceFilter.mastery_level" class="w-full border rounded-md px-3 py-2">
+                                <option value="">全部</option>
+                                <option value="NULL">未练习</option>
+                                <option value="不会">不会</option>
+                                <option value="一般">一般</option>
+                                <option value="会了">会了</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button @click="getRandomQuestion()"
+                            class="mt-4 w-full bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700">
+                        🎲 随机出题
+                    </button>
+                </div>
+
+                <!-- 当前问题 -->
+                <div x-show="currentQuestion" x-cloak class="bg-white rounded-lg shadow p-6">
+                    <div class="mb-4">
+                        <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"
+                              x-text="currentQuestion?.domain"></span>
+                        <span x-show="currentQuestion?.latest_mastery_level"
+                              :class="{
+                                  '不会': 'bg-red-100 text-red-800',
+                                  '一般': 'bg-yellow-100 text-yellow-800',
+                                  '会了': 'bg-green-100 text-green-800'
+                              }[currentQuestion?.latest_mastery_level]"
+                              class="ml-2 inline-block px-3 py-1 text-sm font-medium rounded-full"
+                              x-text="currentQuestion?.latest_mastery_level"></span>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 whitespace-pre-wrap"
+                        x-text="currentQuestion?.refined_question || currentQuestion?.question"></h2>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">你的回答</label>
+                        <textarea x-model="userAnswer"
+                                  rows="6"
+                                  class="w-full border rounded-md px-3 py-2"
+                                  placeholder="请输入你的回答..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">掌握程度</label>
+                        <div class="flex space-x-4">
+                            <button @click="mastery = '不会'"
+                                    :class="mastery === '不会' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    class="flex-1 px-4 py-2 rounded-md font-medium">不会</button>
+                            <button @click="mastery = '一般'"
+                                    :class="mastery === '一般' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    class="flex-1 px-4 py-2 rounded-md font-medium">一般</button>
+                            <button @click="mastery = '会了'"
+                                    :class="mastery === '会了' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    class="flex-1 px-4 py-2 rounded-md font-medium">会了</button>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button @click="submitAnswer()"
+                                :disabled="!userAnswer || !mastery || submittingAnswer"
+                                class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400">
+                            <span x-show="!submittingAnswer">💾 提交答案并获取评分</span>
+                            <span x-show="submittingAnswer">🔄 AI评分中...</span>
+                        </button>
+                        <button @click="markOnly()"
+                                :disabled="!mastery"
+                                class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-md font-medium hover:bg-gray-700 disabled:bg-gray-400">
+                            ✓ 仅标记掌握程度
+                        </button>
+                    </div>
+
+                    <!-- AI评分结果 -->
+                    <div x-show="scoreResult" x-cloak class="mt-6 p-4 bg-blue-50 rounded-md">
+                        <h3 class="font-semibold mb-2">AI评分：<span class="text-2xl text-blue-600" x-text="scoreResult?.ai_score"></span> 分</h3>
+                        <p class="text-sm text-gray-700 mb-3 whitespace-pre-wrap" x-text="scoreResult?.ai_feedback"></p>
+
+                        <details class="mt-3">
+                            <summary class="cursor-pointer font-medium text-blue-600">查看参考答案</summary>
+                            <div class="mt-2 p-3 bg-white rounded border">
+                                <p class="text-sm whitespace-pre-wrap" x-text="scoreResult?.reference_answer"></p>
+                                <p class="mt-2 text-xs text-gray-500">
+                                    <strong>关键词:</strong> <span x-text="scoreResult?.keywords"></span>
+                                </p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- 仅标记后显示答案 -->
+                    <div x-show="markedOnly && !scoreResult && currentQuestion?.has_answer" x-cloak class="mt-6 p-4 bg-green-50 rounded-md border border-green-200">
+                        <h3 class="font-semibold mb-3 text-green-800">✓ 已标记为：<span x-text="mastery"></span></h3>
+                        <details class="mt-3" open>
+                            <summary class="cursor-pointer font-medium text-green-700">查看参考答案</summary>
+                            <div class="mt-2 p-3 bg-white rounded border">
+                                <p class="text-sm whitespace-pre-wrap" x-text="currentQuestion?.answer"></p>
+                                <p class="mt-2 text-xs text-gray-500">
+                                    <strong>关键词:</strong> <span x-text="currentQuestion?.keywords"></span>
+                                </p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <button @click="getRandomQuestion(); scoreResult = null; userAnswer = ''; mastery = null; markedOnly = false;"
+                            class="mt-4 w-full bg-green-600 text-white px-6 py-3 rounded-md font-medium hover:bg-green-700">
+                        ➡️ 下一题
+                    </button>
+                </div>
+
+                <div x-show="!currentQuestion" class="bg-white rounded-lg shadow p-12 text-center">
+                    <p class="text-gray-500">点击"随机出题"开始练习</p>
+                </div>
+            </div>
+
+            <!-- AI助手 Chatbot -->
+            <div x-show="currentTab === 'chatbot'" x-cloak>
+                <div class="bg-white rounded-lg shadow h-[calc(100vh-200px)] flex">
+                    <!-- 左侧会话列表 -->
+                    <div class="w-64 border-r flex flex-col">
+                        <div class="p-4 border-b">
+                            <button @click="startNewChat()"
+                                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 flex items-center justify-center">
+                                <span class="mr-2">➕</span> 新建对话
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto">
+                            <template x-for="(session, idx) in chatSessions" :key="session.sessionId">
+                                <div @click="switchToSession(idx)"
+                                     :class="currentChatSessionIndex === idx ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-gray-50'"
+                                     class="p-3 cursor-pointer border-b transition-colors">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-sm truncate" x-text="session.sessionName"></p>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                <span x-text="session.messages.length"></span> 条消息
+                                            </p>
+                                        </div>
+                                        <button @click.stop="deleteSession(idx)"
+                                                class="ml-2 text-red-500 hover:text-red-700 text-xs">
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 右侧对话区域 -->
+                    <div class="flex-1 flex flex-col">
+                        <!-- Chatbot 头部 -->
+                        <div class="border-b p-4 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-semibold">🤖 AI面试助手</h2>
+                                <p class="text-sm text-gray-500" x-show="currentSession" x-text="currentSession?.sessionName"></p>
+                            </div>
+                            <div class="flex items-center space-x-3 flex-wrap">
+                            <!-- RAG开关 -->
+                            <label class="flex items-center space-x-2 text-sm">
+                                <input type="checkbox" x-model="chatUseRag" class="rounded">
+                                <span>📚 知识库</span>
+                            </label>
+
+                            <!-- 联网搜索开关 -->
+                            <label class="flex items-center space-x-2 text-sm text-blue-600">
+                                <input type="checkbox" x-model="chatEnableSearch" class="rounded border-blue-400">
+                                <span>🌐 联网搜索</span>
+                            </label>
+
+                            <!-- 模型选择 -->
+                            <select x-model="chatModel" class="border rounded-md px-3 py-1 text-sm">
+                                <option value="">自动选择</option>
+                                <option value="qwen-turbo">⚡ Qwen-Turbo (极速)</option>
+                                <option value="qwen2.5-7b">⚡⚡ Qwen2.5-7B (超快)</option>
+                                <option value="qwen3-max">🎯 Qwen3-Max (高质量)</option>
+                                <option value="deepseek-v3">🔄 DeepSeek-V3</option>
+                            </select>
+
+                            <!-- 开发者模式 -->
+                            <label class="flex items-center space-x-2 text-sm text-orange-600">
+                                <input type="checkbox" x-model="chatDevMode" class="rounded border-orange-400">
+                                <span>🔧 开发者</span>
+                            </label>
+                            </div>
+                        </div>
+
+                    <!-- 开发者调试面板 -->
+                    <div x-show="chatDevMode && chatDebugHistory.length > 0" x-cloak
+                         class="border-b bg-gradient-to-r from-orange-50 to-yellow-50">
+                        <details class="p-4" open>
+                            <summary class="cursor-pointer font-semibold text-orange-700 flex items-center space-x-2">
+                                <span>🔧 开发者调试信息</span>
+                                <span class="text-xs bg-orange-200 px-2 py-1 rounded-full">共 <span x-text="chatDebugHistory.length"></span> 轮对话</span>
+                            </summary>
+
+                            <!-- Tabs for different rounds -->
+                            <div class="mt-4 flex space-x-2 border-b border-orange-200 overflow-x-auto">
+                                <template x-for="(debugInfo, idx) in chatDebugHistory" :key="idx">
+                                    <button @click="chatDebugCurrentTab = idx"
+                                            :class="chatDebugCurrentTab === idx ? 'bg-orange-500 text-white' : 'bg-white text-orange-700 hover:bg-orange-100'"
+                                            class="px-4 py-2 rounded-t-md text-sm font-medium whitespace-nowrap transition-colors">
+                                        第 <span x-text="idx + 1"></span> 轮
+                                        <span class="text-xs ml-1" x-show="debugInfo.timings && debugInfo.timings.total">
+                                            (<span x-text="debugInfo.timings.total.toFixed(2)"></span>s)
+                                        </span>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Tab content显示当前选中轮次的信息 -->
+                            <div x-show="chatDebugHistory[chatDebugCurrentTab]" class="mt-4 space-y-4 text-sm">
+                                <!-- 基本信息 + 性能计时 -->
+                                <div class="bg-white rounded-lg p-3 border border-orange-200">
+                                    <h4 class="font-semibold text-gray-700 mb-2">📌 基本信息</h4>
+                                    <div class="space-y-1 text-xs font-mono">
+                                        <p><strong>Session ID:</strong> <span x-text="chatDebugHistory[chatDebugCurrentTab]?.session_id"></span></p>
+                                        <p><strong>Model:</strong> <span x-text="chatDebugHistory[chatDebugCurrentTab]?.model"></span></p>
+                                        <p><strong>当前轮次:</strong> 第 <span x-text="chatDebugCurrentTab + 1"></span> 轮</p>
+                                        <p><strong>对话轮数:</strong> <span x-text="chatDebugHistory[chatDebugCurrentTab]?.context?.conversation_rounds"></span></p>
+                                        <p><strong>总消息数:</strong> <span x-text="chatDebugHistory[chatDebugCurrentTab]?.context?.total_messages"></span></p>
+                                    </div>
+
+                                    <!-- 性能计时 - 始终显示 -->
+                                    <div class="mt-3 pt-3 border-t border-orange-100">
+                                        <h5 class="font-semibold text-gray-700 mb-2">⏱️ 性能计时</h5>
+                                        <div class="space-y-1 text-xs">
+                                            <p>
+                                                <strong>Query改写:</strong>
+                                                <span x-text="(chatDebugHistory[chatDebugCurrentTab]?.timings?.query_rewrite || 0).toFixed(3)"></span>s
+                                            </p>
+                                            <p>
+                                                <strong>RAG检索:</strong>
+                                                <span x-text="(chatDebugHistory[chatDebugCurrentTab]?.timings?.rag_retrieval || 0).toFixed(3)"></span>s
+                                            </p>
+                                            <p>
+                                                <strong>LLM生成:</strong>
+                                                <span x-text="(chatDebugHistory[chatDebugCurrentTab]?.timings?.llm_generation || 0).toFixed(3)"></span>s
+                                            </p>
+                                            <p>
+                                                <strong class="text-orange-700">总耗时:</strong>
+                                                <span class="text-orange-700 font-bold" x-text="(chatDebugHistory[chatDebugCurrentTab]?.timings?.total || 0).toFixed(3)"></span>s
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RAG检索结果 -->
+                                <div class="bg-white rounded-lg p-3 border border-blue-200">
+                                    <h4 class="font-semibold text-gray-700 mb-2">🔍 RAG知识检索</h4>
+                                    <div x-show="chatDebugHistory[chatDebugCurrentTab]?.rag?.enabled">
+                                        <!-- Query改写信息 - 3个版本 -->
+                                        <div x-show="chatDebugHistory[chatDebugCurrentTab]?.rag?.query_versions?.length > 0" class="mb-3 p-2 bg-yellow-50 rounded border border-yellow-200">
+                                            <p class="text-xs font-semibold text-yellow-800 mb-2">📝 Query改写（3个版本）</p>
+                                            <div class="text-xs space-y-2">
+                                                <div class="p-2 bg-white rounded">
+                                                    <p class="text-gray-600 font-semibold mb-1">🔹 原始Query:</p>
+                                                    <p class="text-gray-800 ml-2" x-text="chatDebugHistory[chatDebugCurrentTab]?.rag?.original_query"></p>
+                                                </div>
+                                                <template x-for="(qv, idx) in chatDebugHistory[chatDebugCurrentTab]?.rag?.query_versions || []" :key="idx">
+                                                    <div class="p-2 bg-white rounded">
+                                                        <p class="font-semibold mb-1" :class="{
+                                                            'text-blue-600': idx === 0,
+                                                            'text-green-600': idx === 1,
+                                                            'text-purple-600': idx === 2
+                                                        }">
+                                                            <span x-text="`🔹 ${qv.version}:`"></span>
+                                                        </p>
+                                                        <p class="ml-2" :class="{
+                                                            'text-blue-700': idx === 0,
+                                                            'text-green-700': idx === 1,
+                                                            'text-purple-700': idx === 2
+                                                        }" x-text="qv.query"></p>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <!-- Two-Stage Retrieval Summary -->
+                                        <div class="mb-3 p-2 bg-blue-50 rounded text-xs">
+                                            <p class="font-semibold text-blue-800">📊 两阶段检索统计</p>
+                                            <div class="mt-1 space-y-1">
+                                                <p>粗排方法: <span class="font-mono" x-text="chatDebugHistory[chatDebugCurrentTab]?.rag?.recall_method"></span></p>
+                                                <p>粗排召回: <strong x-text="chatDebugHistory[chatDebugCurrentTab]?.rag?.recall_count"></strong> 个候选</p>
+                                                <p>精排方法: <span class="font-mono" x-text="chatDebugHistory[chatDebugCurrentTab]?.rag?.rerank_method"></span></p>
+                                                <p>精排结果: <strong x-text="chatDebugHistory[chatDebugCurrentTab]?.rag?.final_count"></strong> 个最终</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Final Results (Precision Stage) -->
+                                        <p class="text-xs mb-2 font-semibold">🎯 精排Top-5结果</p>
+                                        <div class="space-y-2">
+                                            <template x-for="(doc, idx) in chatDebugHistory[chatDebugCurrentTab]?.rag?.final_documents || []" :key="idx">
+                                                <div class="bg-blue-50 p-2 rounded text-xs">
+                                                    <div class="flex justify-between mb-1">
+                                                        <span class="font-semibold text-blue-700">[<span x-text="idx + 1"></span>] <span x-text="doc.source?.type"></span>#<span x-text="doc.source?.id"></span></span>
+                                                        <span class="text-blue-600">相关度: <span x-text="doc.score.toFixed(2)"></span></span>
+                                                    </div>
+                                                    <p class="text-gray-600 whitespace-pre-wrap" x-text="doc.content"></p>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <!-- Recall Results (Coarse Stage) - Collapsible -->
+                                        <details class="mt-3" x-data="{ open: false }">
+                                            <summary class="cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900">
+                                                📋 粗排Top-20候选 (点击展开查看详情)
+                                            </summary>
+                                            <div class="mt-2 space-y-2 max-h-96 overflow-y-auto">
+                                                <template x-for="(doc, idx) in chatDebugHistory[chatDebugCurrentTab]?.rag?.recall_documents || []" :key="idx">
+                                                    <div class="bg-gray-50 p-2 rounded text-xs border border-gray-200">
+                                                        <div class="flex justify-between items-start mb-1">
+                                                            <span class="font-semibold text-gray-700">[<span x-text="idx + 1"></span>] <span x-text="doc.metadata?.type"></span>#<span x-text="doc.metadata?.id"></span></span>
+                                                            <div class="text-right">
+                                                                <p class="text-gray-600">综合: <span x-text="doc.score.toFixed(3)"></span></p>
+                                                                <p class="text-blue-600 text-[10px]">向量: <span x-text="doc.vector_score?.toFixed(3) || 'N/A'"></span></p>
+                                                                <p class="text-green-600 text-[10px]">BM25: <span x-text="doc.bm25_score?.toFixed(3) || 'N/A'"></span></p>
+                                                            </div>
+                                                        </div>
+                                                        <p class="text-gray-600 text-[10px]" x-text="doc.content"></p>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </details>
+                                    </div>
+                                    <p x-show="!chatDebugHistory[chatDebugCurrentTab]?.rag?.enabled" class="text-xs text-gray-500">RAG未启用</p>
+                                </div>
+
+                                <!-- 对话历史 -->
+                                <div class="bg-white rounded-lg p-3 border border-green-200">
+                                    <h4 class="font-semibold text-gray-700 mb-2">💬 会话记忆（发送给LLM的历史）</h4>
+                                    <p class="text-xs text-gray-600 mb-2">历史轮数: <strong x-text="chatDebugHistory[chatDebugCurrentTab]?.context?.history_length"></strong></p>
+                                    <div class="space-y-2 max-h-96 overflow-y-auto">
+                                        <template x-for="(msg, idx) in chatDebugHistory[chatDebugCurrentTab]?.context?.history || []" :key="idx">
+                                            <div class="p-2 rounded text-xs"
+                                                 :class="msg.role === 'user' ? 'bg-blue-50' : 'bg-green-50'"
+                                                 x-data="{ expanded: false, lineCount: (msg.content.match(/\n/g) || []).length + 1 }">
+                                                <p class="font-semibold mb-1"
+                                                   :class="msg.role === 'user' ? 'text-blue-700' : 'text-green-700'"
+                                                   x-text="msg.role === 'user' ? '👤 User' : '🤖 Assistant'"></p>
+                                                <p class="text-gray-700 whitespace-pre-wrap"
+                                                   :class="!expanded && lineCount > 10 ? 'line-clamp-10' : ''"
+                                                   x-text="msg.content"></p>
+                                                <button x-show="lineCount > 10"
+                                                        @click="expanded = !expanded"
+                                                        class="mt-1 text-blue-600 hover:text-blue-800 text-xs"
+                                                        x-text="expanded ? '▲ 收起' : '▼ 展开 (共' + lineCount + '行)'"></button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Base System Prompt -->
+                                <div class="bg-white rounded-lg p-3 border border-purple-200"
+                                     x-data="{
+                                         expanded: false,
+                                         get lineCount() {
+                                             return chatDebugHistory[chatDebugCurrentTab]?.context?.base_system_prompt
+                                                 ? (chatDebugInfo.context.base_system_prompt.match(/\n/g) || []).length + 1
+                                                 : 0
+                                         }
+                                     }">
+                                    <h4 class="font-semibold text-gray-700 mb-2">⚙️ 基础 System Prompt</h4>
+                                    <pre class="text-xs bg-gray-50 p-2 rounded overflow-x-auto whitespace-pre-wrap"
+                                         :class="!expanded && lineCount > 10 ? 'line-clamp-10' : ''"
+                                         x-text="chatDebugHistory[chatDebugCurrentTab]?.context?.base_system_prompt"></pre>
+                                    <button x-show="lineCount > 10"
+                                            @click="expanded = !expanded"
+                                            class="mt-1 text-purple-600 hover:text-purple-800 text-xs"
+                                            x-text="expanded ? '▲ 收起' : '▼ 展开 (共' + lineCount + '行)'"></button>
+                                </div>
+
+                                <!-- Current Round RAG Context -->
+                                <div x-show="chatDebugHistory[chatDebugCurrentTab]?.context?.current_rag_context"
+                                     class="bg-white rounded-lg p-3 border border-orange-200"
+                                     x-data="{
+                                         expanded: false,
+                                         get lineCount() {
+                                             return chatDebugHistory[chatDebugCurrentTab]?.context?.current_rag_context
+                                                 ? (chatDebugInfo.context.current_rag_context.match(/\n/g) || []).length + 1
+                                                 : 0
+                                         }
+                                     }">
+                                    <h4 class="font-semibold text-gray-700 mb-2">🎯 本轮RAG注入内容（仅本次对话）</h4>
+                                    <pre class="text-xs bg-orange-50 p-2 rounded overflow-x-auto whitespace-pre-wrap"
+                                         :class="!expanded && lineCount > 10 ? 'line-clamp-10' : ''"
+                                         x-text="chatDebugHistory[chatDebugCurrentTab]?.context?.current_rag_context"></pre>
+                                    <button x-show="lineCount > 10"
+                                            @click="expanded = !expanded"
+                                            class="mt-1 text-orange-600 hover:text-orange-800 text-xs"
+                                            x-text="expanded ? '▲ 收起' : '▼ 展开 (共' + lineCount + '行)'"></button>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- 对话历史区域 -->
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chatMessages">
+                        <!-- 欢迎消息 -->
+                        <div x-show="chatMessages.length === 0" class="text-center py-12">
+                            <div class="text-6xl mb-4">🤖</div>
+                            <h3 class="text-xl font-semibold text-gray-700 mb-2">AI面试助手</h3>
+                            <p class="text-gray-500">我可以帮你回答面试相关的问题</p>
+                            <p class="text-sm text-gray-400 mt-4">建议问题：</p>
+                            <div class="mt-3 space-y-2">
+                                <button @click="chatInput = '什么是RAG技术？'; sendChatMessage()"
+                                        class="block mx-auto px-4 py-2 bg-gray-100 rounded-md text-sm hover:bg-gray-200">
+                                    什么是RAG技术？
+                                </button>
+                                <button @click="chatInput = '如何准备系统设计面试？'; sendChatMessage()"
+                                        class="block mx-auto px-4 py-2 bg-gray-100 rounded-md text-sm hover:bg-gray-200">
+                                    如何准备系统设计面试？
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 消息列表 -->
+                        <template x-for="(msg, index) in chatMessages" :key="index">
+                            <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                                <div :class="msg.role === 'user' ? 'bg-blue-50 text-gray-800 border border-blue-200' : 'bg-gray-100 text-gray-800'"
+                                     class="max-w-3xl rounded-lg p-4">
+                                    <!-- 角色标签 -->
+                                    <div class="text-xs mb-2 opacity-75">
+                                        <span x-text="msg.role === 'user' ? '👤 你' : '🤖 AI助手'"></span>
+                                    </div>
+
+                                    <!-- AI助手正在思考（内容为空时显示） -->
+                                    <div x-show="msg.role === 'assistant' && !msg.content" class="flex items-center space-x-2">
+                                        <div class="animate-pulse">正在思考</div>
+                                        <div class="flex space-x-1">
+                                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 消息内容 (Markdown渲染) -->
+                                    <div x-show="msg.content" class="prose prose-sm max-w-none"
+                                         x-html="marked.parse(msg.content)">
+                                    </div>
+
+                                    <!-- 时间戳 -->
+                                    <div class="text-xs mt-2 opacity-50"
+                                         x-text="new Date(msg.timestamp).toLocaleTimeString()">
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 输入区域 -->
+                    <div class="border-t p-4">
+                        <div class="flex items-end space-x-3">
+                            <textarea
+                                x-model="chatInput"
+                                @keydown.enter.ctrl="sendChatMessage()"
+                                placeholder="输入你的问题... (Ctrl+Enter 发送)"
+                                rows="3"
+                                class="flex-1 border rounded-md px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                :disabled="chatStreaming"
+                            ></textarea>
+                            <button
+                                @click="sendChatMessage()"
+                                :disabled="!chatInput.trim() || chatStreaming"
+                                class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed h-[76px] flex items-center justify-center">
+                                <span x-show="!chatStreaming">发送 →</span>
+                                <span x-show="chatStreaming">
+                                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500">
+                            提示：Ctrl+Enter 快速发送 | 支持Markdown格式
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- 原始问题管理 -->
+            <div x-show="currentTab === 'source'" x-cloak>
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-lg font-semibold mb-4">添加原始问题</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">来源标题</label>
+                            <input x-model="newSource.source_title"
+                                   type="text"
+                                   class="w-full border rounded-md px-3 py-2"
+                                   placeholder="例如：阿里云Agent算法一面">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">原始问题文本</label>
+                            <textarea x-model="newSource.original_text"
+                                      rows="4"
+                                      class="w-full border rounded-md px-3 py-2"
+                                      placeholder="粘贴面经中的原始问题文本..."></textarea>
+                        </div>
+                        <button @click="addSourceQuestion()"
+                                :disabled="!newSource.original_text"
+                                class="w-full bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400">
+                            ➕ 添加原始问题
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">原始问题列表</h2>
+                        <button @click="loadSourceQuestions()" class="text-blue-600 hover:text-blue-700">
+                            🔄 刷新
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="source in sourceQuestions" :key="source.id">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-medium" x-text="source.source_title"></h3>
+                                    <span :class="source.is_extracted ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                                          class="px-2 py-1 text-xs rounded-full">
+                                        <span x-text="source.is_extracted ? '已提取' : '未提取'"></span>
+                                        <span x-show="source.is_extracted" x-text="'(' + source.detail_count + '题)'"></span>
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3" x-text="source.original_text.substring(0, 200) + '...'"></p>
+                                <div class="flex space-x-2">
+                                    <button @click="extractQuestions(source.id)"
+                                            x-show="!source.is_extracted"
+                                            :disabled="extractingSourceId === source.id"
+                                            class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400">
+                                        <span x-show="extractingSourceId !== source.id">🔍 提取问题</span>
+                                        <span x-show="extractingSourceId === source.id">🔄 提取中...</span>
+                                    </button>
+                                    <button @click="deleteSource(source.id)"
+                                            class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                                        🗑️ 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 明细问题查看 -->
+            <div x-show="currentTab === 'questions'" x-cloak>
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-lg font-semibold mb-4">筛选条件</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <select x-model="questionFilter.domain" @change="loadQuestions()" class="border rounded-md px-3 py-2">
+                            <option value="">全部领域</option>
+                            <option>大模型</option>
+                            <option>RAG</option>
+                            <option>记忆管理</option>
+                            <option>Langchain语法</option>
+                            <option>智能体框架</option>
+                            <option>效果评测</option>
+                            <option>工程化部署实践</option>
+                            <option>其他</option>
+                        </select>
+                        <select x-model="questionFilter.has_answer" @change="loadQuestions()" class="border rounded-md px-3 py-2">
+                            <option value="">全部</option>
+                            <option value="true">有答案</option>
+                            <option value="false">无答案</option>
+                        </select>
+                        <select x-model="questionFilter.mastery_level" @change="loadQuestions()" class="border rounded-md px-3 py-2">
+                            <option value="">全部掌握程度</option>
+                            <option value="不会">不会</option>
+                            <option value="一般">一般</option>
+                            <option value="会了">会了</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">
+                            明细问题列表
+                            <span class="text-sm text-gray-500">（共 <span x-text="detailQuestions.length"></span> 题）</span>
+                        </h2>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="q in detailQuestions" :key="q.id">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex items-start justify-between mb-2">
+                                    <h3 class="font-medium flex-1 whitespace-pre-wrap" x-text="q.refined_question || q.question"></h3>
+                                    <div class="flex space-x-2 ml-4">
+                                        <span x-show="q.domain"
+                                              class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                                              x-text="q.domain"></span>
+                                        <span x-show="q.latest_mastery_level"
+                                              :class="{
+                                                  '不会': 'bg-red-100 text-red-800',
+                                                  '一般': 'bg-yellow-100 text-yellow-800',
+                                                  '会了': 'bg-green-100 text-green-800'
+                                              }[q.latest_mastery_level]"
+                                              class="px-2 py-1 text-xs rounded-full"
+                                              x-text="q.latest_mastery_level"></span>
+                                    </div>
+                                </div>
+                                <details x-show="q.has_answer">
+                                    <summary class="cursor-pointer text-sm text-blue-600 mb-2">查看答案</summary>
+                                    <div class="mt-2 p-3 bg-gray-50 rounded text-sm">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <p class="whitespace-pre-wrap flex-1" x-text="q.answer"></p>
+                                            <button @click="openEditAnswer(q)"
+                                                    class="ml-2 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                                                ✏️ 编辑
+                                            </button>
+                                        </div>
+                                        <p class="text-xs text-gray-500">
+                                            <strong>关键词:</strong> <span x-text="q.keywords"></span>
+                                        </p>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <strong>领域:</strong> <span x-text="q.domain || '未分类'"></span>
+                                        </p>
+                                    </div>
+                                </details>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 编辑答案模态框 -->
+                <div x-show="showEditAnswerModal"
+                     x-cloak
+                     @click.self="showEditAnswerModal = false"
+                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        <!-- 模态框头部 -->
+                        <div class="flex justify-between items-center p-6 border-b">
+                            <h3 class="text-xl font-semibold">编辑答案</h3>
+                            <button @click="showEditAnswerModal = false"
+                                    class="text-gray-500 hover:text-gray-700 text-2xl">
+                                ×
+                            </button>
+                        </div>
+
+                        <!-- 模态框内容 -->
+                        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                            <!-- 问题显示 -->
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-sm font-semibold text-blue-900 mb-2">问题</p>
+                                <p class="whitespace-pre-wrap" x-text="editingQuestion?.refined_question || editingQuestion?.question"></p>
+                            </div>
+
+                            <!-- 答案编辑 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">答案内容 *</label>
+                                <textarea x-model="editAnswer.answer"
+                                          rows="12"
+                                          class="w-full border rounded-md px-3 py-2 font-mono text-sm"
+                                          placeholder="输入答案内容..."></textarea>
+                            </div>
+
+                            <!-- 关键词 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">关键词</label>
+                                <input type="text"
+                                       x-model="editAnswer.keywords"
+                                       class="w-full border rounded-md px-3 py-2"
+                                       placeholder="用逗号分隔关键词">
+                            </div>
+
+                            <!-- 领域 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">领域</label>
+                                <select x-model="editAnswer.domain" class="w-full border rounded-md px-3 py-2">
+                                    <option value="">未分类</option>
+                                    <option value="大模型">大模型</option>
+                                    <option value="RAG">RAG</option>
+                                    <option value="记忆管理">记忆管理</option>
+                                    <option value="Langchain语法">Langchain语法</option>
+                                    <option value="智能体框架">智能体框架</option>
+                                    <option value="效果评测">效果评测</option>
+                                    <option value="工程化部署实践">工程化部署实践</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 模态框底部 -->
+                        <div class="flex justify-end space-x-3 p-6 border-t">
+                            <button @click="showEditAnswerModal = false"
+                                    class="px-4 py-2 border rounded-md hover:bg-gray-50">
+                                取消
+                            </button>
+                            <button @click="saveAnswer()"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                💾 保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 笔记管理 -->
+            <div x-show="currentTab === 'notes'" x-cloak>
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">📝 添加新笔记</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">笔记标题</label>
+                            <input type="text" x-model="newNote.title" placeholder="输入笔记标题"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">笔记类型</label>
+                            <select x-model="newNote.note_type" class="border rounded-md px-3 py-2">
+                                <option value="心得">心得</option>
+                                <option value="面试记录">面试记录</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">笔记内容（可粘贴面试录音转文本）</label>
+                            <textarea x-model="newNote.content" rows="8" placeholder="输入或粘贴笔记内容"
+                                      class="w-full border rounded-md px-3 py-2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">标签（用逗号分隔）</label>
+                            <input type="text" x-model="newNote.tags" placeholder="例如: Python,算法,系统设计"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <button @click="addNote()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                            保存笔记
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">
+                            笔记列表
+                            <span class="text-sm text-gray-500">（共 <span x-text="notes.length"></span> 篇）</span>
+                        </h2>
+                        <div class="flex items-center space-x-2">
+                            <input type="text"
+                                   x-model="noteSearchQuery"
+                                   @input="searchNotes()"
+                                   placeholder="搜索标题或内容..."
+                                   class="border rounded-md px-3 py-1 text-sm w-64">
+                            <button @click="noteSearchQuery=''; searchNotes()"
+                                    class="text-gray-500 hover:text-gray-700">
+                                清除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="note in notes" :key="note.id">
+                            <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-medium text-lg" x-text="note.title"></h3>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
+                                              x-text="note.note_type"></span>
+                                        <button @click="viewNoteDetail(note)"
+                                                class="text-blue-600 text-sm hover:underline">
+                                            查看详情
+                                        </button>
+                                        <button @click="deleteNote(note.id)"
+                                                class="text-red-600 text-sm hover:underline">
+                                            删除
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- 摘要显示（前150个字符） -->
+                                <p class="text-gray-600 mb-2"
+                                   x-text="note.content.length > 150 ? note.content.substring(0, 150) + '...' : note.content">
+                                </p>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span x-show="note.tags">标签: <span x-text="note.tags"></span></span>
+                                    <span x-text="new Date(note.created_at).toLocaleString()"></span>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="notes.length === 0" class="text-center text-gray-500 py-8">
+                            暂无笔记
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 笔记详情模态框 -->
+                <div x-show="showNoteModal"
+                     x-cloak
+                     @click.self="showNoteModal = false"
+                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        <!-- 模态框头部 -->
+                        <div class="flex justify-between items-center p-6 border-b">
+                            <h3 class="text-xl font-semibold" x-text="currentNote?.title"></h3>
+                            <button @click="showNoteModal = false"
+                                    class="text-gray-500 hover:text-gray-700 text-2xl">
+                                ×
+                            </button>
+                        </div>
+
+                        <!-- 模态框内容（Markdown渲染） -->
+                        <div class="flex-1 overflow-y-auto p-6">
+                            <div class="mb-4 flex items-center space-x-3 text-sm text-gray-600">
+                                <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full"
+                                      x-text="currentNote?.note_type"></span>
+                                <span x-show="currentNote?.tags">
+                                    标签: <span x-text="currentNote?.tags"></span>
+                                </span>
+                                <span x-text="currentNote?.created_at ? new Date(currentNote.created_at).toLocaleString() : ''"></span>
+                            </div>
+
+                            <!-- Markdown渲染内容 -->
+                            <div class="prose max-w-none"
+                                 x-html="currentNote?.content ? marked.parse(currentNote.content) : ''">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 面试日程 -->
+            <div x-show="currentTab === 'schedules'">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">📅 添加面试日程</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">公司名称</label>
+                            <input type="text" x-model="newSchedule.company_name"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">岗位名称</label>
+                            <input type="text" x-model="newSchedule.position_name"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">面试时间</label>
+                            <input type="datetime-local" x-model="newSchedule.interview_time"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">面试类型</label>
+                            <select x-model="newSchedule.interview_type" class="w-full border rounded-md px-3 py-2">
+                                <option value="视频面试">视频面试</option>
+                                <option value="电话面试">电话面试</option>
+                                <option value="现场面试">现场面试</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium mb-2">地点/链接</label>
+                            <input type="text" x-model="newSchedule.location"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium mb-2">备注</label>
+                            <textarea x-model="newSchedule.notes" rows="2"
+                                      class="w-full border rounded-md px-3 py-2"></textarea>
+                        </div>
+                    </div>
+                    <button @click="addSchedule()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                        添加日程
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold mb-4">面试日程列表</h2>
+                    <div class="space-y-4">
+                        <template x-for="schedule in schedules" :key="schedule.id">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 class="font-medium text-lg">
+                                            <span x-text="schedule.company_name"></span> - <span x-text="schedule.position_name"></span>
+                                        </h3>
+                                        <p class="text-gray-600 text-sm mt-1">
+                                            🕒 <span x-text="new Date(schedule.interview_time).toLocaleString()"></span>
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span :class="{
+                                            '待面试': 'bg-yellow-100 text-yellow-800',
+                                            '已完成': 'bg-green-100 text-green-800',
+                                            '已取消': 'bg-gray-100 text-gray-800'
+                                        }[schedule.status]" class="px-2 py-1 text-xs rounded-full" x-text="schedule.status"></span>
+                                        <button @click="deleteSchedule(schedule.id)" class="text-red-600 text-sm hover:underline">删除</button>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600" x-show="schedule.interview_type">
+                                    类型: <span x-text="schedule.interview_type"></span>
+                                </p>
+                                <p class="text-sm text-gray-600" x-show="schedule.location">
+                                    地点: <span x-text="schedule.location"></span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1" x-show="schedule.notes" x-text="schedule.notes"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 岗位分析 -->
+            <div x-show="currentTab === 'job-analysis'">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">💼 岗位分析与面试准备计划</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">岗位名称</label>
+                            <input type="text" x-model="newJobAnalysis.job_title" placeholder="例如: 高级AI工程师"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">公司名称（可选）</label>
+                            <input type="text" x-model="newJobAnalysis.company_name" placeholder="例如: 阿里巴巴"
+                                   class="w-full border rounded-md px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">岗位JD</label>
+                            <textarea x-model="newJobAnalysis.jd_content" rows="10" placeholder="粘贴完整的岗位描述..."
+                                      class="w-full border rounded-md px-3 py-2"></textarea>
+                        </div>
+                        <!-- 分离保存和AI分析 -->
+                        <div class="flex space-x-3">
+                            <button @click="saveJobAnalysis(false)" :disabled="analyzingJob"
+                                    class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 disabled:bg-gray-400">
+                                💾 保存
+                            </button>
+                            <button @click="saveJobAnalysis(true)" :disabled="analyzingJob"
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400">
+                                <span x-show="!analyzingJob">🔍 保存并AI分析</span>
+                                <span x-show="analyzingJob">🔄 分析中...</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            💡 提示：可以先快速保存，稍后再触发AI分析
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">历史分析记录</h2>
+                        <button @click="loadJobAnalyses()" class="text-sm text-blue-600 hover:underline">
+                            🔄 刷新状态
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="analysis in jobAnalyses" :key="analysis.id">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <h3 class="font-medium text-lg">
+                                            <span x-text="analysis.job_title"></span>
+                                            <span x-show="analysis.company_name" class="text-gray-500" x-text="'@ ' + analysis.company_name"></span>
+                                        </h3>
+                                        <!-- 状态标签 -->
+                                        <div class="mt-2">
+                                            <span x-show="analysis.analysis_status === 'pending'"
+                                                  class="inline-block px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
+                                                ⏳ 未分析
+                                            </span>
+                                            <span x-show="analysis.analysis_status === 'processing'"
+                                                  class="inline-block px-2 py-1 text-xs bg-blue-200 text-blue-700 rounded">
+                                                🔄 分析中...
+                                            </span>
+                                            <span x-show="analysis.analysis_status === 'completed'"
+                                                  class="inline-block px-2 py-1 text-xs bg-green-200 text-green-700 rounded">
+                                                ✅ 已完成
+                                            </span>
+                                            <span x-show="analysis.analysis_status === 'failed'"
+                                                  class="inline-block px-2 py-1 text-xs bg-red-200 text-red-700 rounded">
+                                                ❌ 分析失败
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <!-- 只有未分析或失败状态时显示分析按钮 -->
+                                        <button x-show="analysis.analysis_status === 'pending' || analysis.analysis_status === 'failed'"
+                                                @click="triggerAnalysis(analysis.id)"
+                                                class="text-blue-600 text-sm hover:underline">
+                                            🔍 分析
+                                        </button>
+                                        <button @click="deleteJobAnalysis(analysis.id)"
+                                                class="text-red-600 text-sm hover:underline">
+                                            删除
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- 只有已完成状态才显示详情 -->
+                                <details x-show="analysis.analysis_status === 'completed'">
+                                    <summary class="cursor-pointer text-sm text-blue-600 mb-2">查看面试准备计划</summary>
+                                    <div class="mt-2 p-3 bg-gray-50 rounded text-sm prose prose-sm max-w-none"
+                                         x-html="analysis.analysis_result ? marked.parse(analysis.analysis_result) : ''">
+                                    </div>
+                                </details>
+                                <p class="text-xs text-gray-500 mt-2" x-text="new Date(analysis.created_at).toLocaleString()"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 设置弹窗 -->
+        <div x-show="showSettings" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showSettings = false">
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+                <h2 class="text-xl font-bold mb-4">⚙️ 系统设置</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">后端服务器IP地址</label>
+                    <input type="text" x-model="settingsApiHost" placeholder="例如: 192.168.1.100" class="w-full border rounded-md px-3 py-2">
+                    <p class="text-xs text-gray-500 mt-1">留空则自动使用当前地址</p>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                    <p class="text-sm text-blue-900 font-medium mb-2">📱 手机访问步骤：</p>
+                    <ol class="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                        <li>确保手机和电脑在同一WiFi</li>
+                        <li>双击 get_ip.bat 查看电脑IP</li>
+                        <li>在此填入电脑IP并保存</li>
+                        <li>手机浏览器访问: http://电脑IP:3000</li>
+                    </ol>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button @click="showSettings = false" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">取消</button>
+                    <button @click="saveSettings()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">保存并刷新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从 localStorage 读取 API 地址，如果没有则使用当前主机名
+        function getApiBase() {
+            const savedHost = localStorage.getItem('apiHost');
+            if (savedHost) {
+                return `http://${savedHost}:8000/api`;
+            }
+            // 默认使用当前浏览器的主机名（支持局域网访问）
+            const hostname = window.location.hostname || 'localhost';
+            return `http://${hostname}:8000/api`;
+        }
+        const API_BASE = getApiBase();
+
+        function app() {
+            return {
+                currentTab: 'practice',
+                stats: {},
+                practiceFilter: { domain: '', mastery_level: '' },
+                questionFilter: { domain: '', has_answer: '', mastery_level: '' },
+                currentQuestion: null,
+                userAnswer: '',
+                mastery: null,
+                scoreResult: null,
+                markedOnly: false,
+                sourceQuestions: [],
+                detailQuestions: [],
+                newSource: { source_title: '', original_text: '' },
+                showSettings: false,
+                // 编辑答案相关
+                showEditAnswerModal: false,
+                editingQuestion: null,
+                editAnswer: { answer: '', keywords: '', domain: '' },
+                settingsApiHost: localStorage.getItem('apiHost') || '',
+                // 新增模块数据
+                notes: [],
+                newNote: { title: '', content: '', note_type: '心得', tags: '' },
+                noteSearchQuery: '',
+                showNoteModal: false,
+                currentNote: null,
+                // Chatbot数据 - 多会话管理
+                chatSessions: [],  // 所有会话列表
+                currentChatSessionIndex: -1,  // 当前会话索引（-1表示无会话）
+                chatInput: '',
+                chatModel: 'qwen-turbo',  // 默认模型：qwen-turbo (极致速度)
+                chatUseRag: true,
+                chatEnableSearch: false,  // 联网搜索开关
+                chatDevMode: true,  // 开发者模式（默认开启）
+                chatStreaming: false,
+                schedules: [],
+                upcomingInterviews: [],
+                newSchedule: { company_name: '', position_name: '', interview_time: '', interview_type: '视频面试', location: '', notes: '', status: '待面试' },
+                jobAnalyses: [],
+                newJobAnalysis: { job_title: '', company_name: '', jd_content: '' },
+                analyzingJob: false,
+                // Loading状态
+                submittingAnswer: false,
+                extractingSourceId: null,
+
+                // 计算属性：当前会话
+                get currentSession() {
+                    return this.currentChatSessionIndex >= 0 ? this.chatSessions[this.currentChatSessionIndex] : null;
+                },
+                get chatMessages() {
+                    return this.currentSession?.messages || [];
+                },
+                get chatDebugHistory() {
+                    return this.currentSession?.debugHistory || [];
+                },
+                get chatDebugCurrentTab() {
+                    return this.currentSession?.debugCurrentTab || 0;
+                },
+                set chatDebugCurrentTab(value) {
+                    if (this.currentSession) {
+                        this.currentSession.debugCurrentTab = value;
+                    }
+                },
+
+                async init() {
+                    await this.loadStatistics();
+                    await this.loadSourceQuestions();
+                    await this.loadQuestions();
+                    await this.loadNotes();
+                    await this.loadSchedules();
+                    await this.loadUpcomingInterviews();
+                    await this.loadJobAnalyses();
+                    // 初始化：创建第一个会话
+                    this.startNewChat();
+                },
+
+                saveSettings() {
+                    if (this.settingsApiHost.trim()) {
+                        localStorage.setItem('apiHost', this.settingsApiHost.trim());
+                    } else {
+                        localStorage.removeItem('apiHost');
+                    }
+                    location.reload();
+                },
+
+                async loadStatistics() {
+                    try {
+                        const res = await fetch(`${API_BASE}/questions/statistics/overview`);
+                        this.stats = await res.json();
+                    } catch (error) {
+                        console.error('加载统计失败:', error);
+                    }
+                },
+
+                async getRandomQuestion() {
+                    try {
+                        let url = `${API_BASE}/questions/random?`;
+                        if (this.practiceFilter.domain) url += `domain=${this.practiceFilter.domain}&`;
+                        if (this.practiceFilter.mastery_level && this.practiceFilter.mastery_level !== 'NULL') {
+                            url += `mastery_level=${this.practiceFilter.mastery_level}`;
+                        }
+
+                        const res = await fetch(url);
+                        if (res.ok) {
+                            this.currentQuestion = await res.json();
+                            this.userAnswer = '';
+                            this.mastery = null;
+                            this.scoreResult = null;
+                            this.markedOnly = false;
+                        } else {
+                            alert('没有符合条件的问题');
+                        }
+                    } catch (error) {
+                        alert('获取问题失败: ' + error.message);
+                    }
+                },
+
+                async submitAnswer() {
+                    if (!this.userAnswer || !this.mastery) {
+                        alert('请填写回答并选择掌握程度');
+                        return;
+                    }
+
+                    this.submittingAnswer = true;
+                    try {
+                        const res = await fetch(`${API_BASE}/practice/submit`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                question_id: this.currentQuestion.id,
+                                user_answer: this.userAnswer,
+                                mastery_level: this.mastery
+                            })
+                        });
+
+                        if (res.ok) {
+                            this.scoreResult = await res.json();
+                            await this.loadStatistics();
+                        } else {
+                            alert('提交失败');
+                        }
+                    } catch (error) {
+                        alert('提交失败: ' + error.message);
+                    } finally {
+                        this.submittingAnswer = false;
+                    }
+                },
+
+                async markOnly() {
+                    if (!this.mastery) {
+                        alert('请选择掌握程度');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/practice/mark-mastery?question_id=${this.currentQuestion.id}&mastery_level=${this.mastery}`, {
+                            method: 'POST'
+                        });
+
+                        if (res.ok) {
+                            this.markedOnly = true;
+                            await this.loadStatistics();
+                        } else {
+                            alert('标记失败');
+                        }
+                    } catch (error) {
+                        alert('标记失败: ' + error.message);
+                    }
+                },
+
+                async loadSourceQuestions() {
+                    try {
+                        const res = await fetch(`${API_BASE}/source/`);
+                        this.sourceQuestions = await res.json();
+                    } catch (error) {
+                        console.error('加载原始问题失败:', error);
+                    }
+                },
+
+                openEditAnswer(question) {
+                    this.editingQuestion = question;
+                    this.editAnswer = {
+                        answer: question.answer || '',
+                        keywords: question.keywords || '',
+                        domain: question.domain || ''
+                    };
+                    this.showEditAnswerModal = true;
+                },
+
+                async saveAnswer() {
+                    if (!this.editAnswer.answer.trim()) {
+                        alert('请输入答案内容');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/questions/${this.editingQuestion.id}/answer`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.editAnswer)
+                        });
+
+                        if (res.ok) {
+                            const updated = await res.json();
+                            // 更新列表中的问题
+                            const index = this.detailQuestions.findIndex(q => q.id === updated.id);
+                            if (index !== -1) {
+                                this.detailQuestions[index] = updated;
+                            }
+                            alert('答案保存成功！');
+                            this.showEditAnswerModal = false;
+                            await this.loadQuestions();
+                            await this.loadStatistics();
+                        } else {
+                            const error = await res.json();
+                            alert('保存失败: ' + (error.detail || '未知错误'));
+                        }
+                    } catch (error) {
+                        alert('保存失败: ' + error.message);
+                    }
+                },
+
+                async addSourceQuestion() {
+                    if (!this.newSource.original_text) {
+                        alert('请输入原始问题文本');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/source/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.newSource)
+                        });
+
+                        if (res.ok) {
+                            alert('添加成功！');
+                            this.newSource = { source_title: '', original_text: '' };
+                            await this.loadSourceQuestions();
+                        } else {
+                            const error = await res.json();
+                            alert('添加失败: ' + error.detail);
+                        }
+                    } catch (error) {
+                        alert('添加失败: ' + error.message);
+                    }
+                },
+
+                async extractQuestions(sourceId) {
+                    if (!confirm('确定要提取这个原始问题的明细问题吗？')) return;
+
+                    this.extractingSourceId = sourceId;
+                    try {
+                        const res = await fetch(`${API_BASE}/source/${sourceId}/extract`, {
+                            method: 'POST'
+                        });
+
+                        if (res.ok) {
+                            const result = await res.json();
+                            alert(`提取成功！识别到 ${result.total_identified} 个问题，成功保存 ${result.detail_count} 个`);
+                            await this.loadSourceQuestions();
+                            await this.loadQuestions();
+                            await this.loadStatistics();
+                        } else {
+                            const error = await res.json();
+                            alert('提取失败: ' + error.detail);
+                        }
+                    } catch (error) {
+                        alert('提取失败: ' + error.message);
+                    } finally {
+                        this.extractingSourceId = null;
+                    }
+                },
+
+                async deleteSource(sourceId) {
+                    if (!confirm('确定要删除这个原始问题吗？')) return;
+
+                    try {
+                        const res = await fetch(`${API_BASE}/source/${sourceId}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (res.ok) {
+                            alert('删除成功！');
+                            await this.loadSourceQuestions();
+                        } else {
+                            alert('删除失败');
+                        }
+                    } catch (error) {
+                        alert('删除失败: ' + error.message);
+                    }
+                },
+
+                async loadQuestions() {
+                    try {
+                        let url = `${API_BASE}/questions/?limit=200`;
+                        if (this.questionFilter.domain) url += `&domain=${this.questionFilter.domain}`;
+                        if (this.questionFilter.has_answer) url += `&has_answer=${this.questionFilter.has_answer}`;
+                        if (this.questionFilter.mastery_level) url += `&mastery_level=${this.questionFilter.mastery_level}`;
+
+                        const res = await fetch(url);
+                        this.detailQuestions = await res.json();
+                    } catch (error) {
+                        console.error('加载明细问题失败:', error);
+                    }
+                },
+
+                // ========== 笔记管理 ==========
+                async loadNotes() {
+                    try {
+                        let url = `${API_BASE}/notes/`;
+                        if (this.noteSearchQuery.trim()) {
+                            url += `?search=${encodeURIComponent(this.noteSearchQuery.trim())}`;
+                        }
+                        const res = await fetch(url);
+                        this.notes = await res.json();
+                    } catch (error) {
+                        console.error('加载笔记失败:', error);
+                    }
+                },
+
+                async searchNotes() {
+                    await this.loadNotes();
+                },
+
+                viewNoteDetail(note) {
+                    this.currentNote = note;
+                    this.showNoteModal = true;
+                },
+
+                async addNote() {
+                    if (!this.newNote.title || !this.newNote.content) {
+                        alert('请填写标题和内容');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/notes/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.newNote)
+                        });
+
+                        if (res.ok) {
+                            alert('保存成功！');
+                            this.newNote = { title: '', content: '', note_type: '心得', tags: '' };
+                            await this.loadNotes();
+                        } else {
+                            alert('保存失败');
+                        }
+                    } catch (error) {
+                        alert('保存失败: ' + error.message);
+                    }
+                },
+
+                async deleteNote(noteId) {
+                    if (!confirm('确定要删除这篇笔记吗？')) return;
+
+                    try {
+                        const res = await fetch(`${API_BASE}/notes/${noteId}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            alert('删除成功！');
+                            await this.loadNotes();
+                        }
+                    } catch (error) {
+                        alert('删除失败: ' + error.message);
+                    }
+                },
+
+                // ========== 面试日程管理 ==========
+                async loadSchedules() {
+                    try {
+                        const res = await fetch(`${API_BASE}/schedules/`);
+                        this.schedules = await res.json();
+                    } catch (error) {
+                        console.error('加载面试日程失败:', error);
+                    }
+                },
+
+                async loadUpcomingInterviews() {
+                    try {
+                        const res = await fetch(`${API_BASE}/schedules/upcoming?days=7`);
+                        this.upcomingInterviews = await res.json();
+                    } catch (error) {
+                        console.error('加载即将到来的面试失败:', error);
+                    }
+                },
+
+                async addSchedule() {
+                    if (!this.newSchedule.company_name || !this.newSchedule.position_name || !this.newSchedule.interview_time) {
+                        alert('请填写公司名称、岗位名称和面试时间');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/schedules/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.newSchedule)
+                        });
+
+                        if (res.ok) {
+                            alert('添加成功！');
+                            this.newSchedule = { company_name: '', position_name: '', interview_time: '', interview_type: '视频面试', location: '', notes: '', status: '待面试' };
+                            await this.loadSchedules();
+                            await this.loadUpcomingInterviews();
+                        } else {
+                            alert('添加失败');
+                        }
+                    } catch (error) {
+                        alert('添加失败: ' + error.message);
+                    }
+                },
+
+                async deleteSchedule(scheduleId) {
+                    if (!confirm('确定要删除这条面试日程吗？')) return;
+
+                    try {
+                        const res = await fetch(`${API_BASE}/schedules/${scheduleId}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            alert('删除成功！');
+                            await this.loadSchedules();
+                            await this.loadUpcomingInterviews();
+                        }
+                    } catch (error) {
+                        alert('删除失败: ' + error.message);
+                    }
+                },
+
+                // ========== 岗位分析 ==========
+                async loadJobAnalyses() {
+                    try {
+                        const res = await fetch(`${API_BASE}/job-analysis/`);
+                        this.jobAnalyses = await res.json();
+                    } catch (error) {
+                        console.error('加载岗位分析失败:', error);
+                    }
+                },
+
+                async saveJobAnalysis(triggerAnalysis = false) {
+                    if (!this.newJobAnalysis.job_title || !this.newJobAnalysis.jd_content) {
+                        alert('请填写岗位名称和JD内容');
+                        return;
+                    }
+
+                    this.analyzingJob = triggerAnalysis; // 只有触发分析时才显示loading
+                    try {
+                        // 添加 trigger_analysis 查询参数
+                        const url = triggerAnalysis
+                            ? `${API_BASE}/job-analysis/?trigger_analysis=true`
+                            : `${API_BASE}/job-analysis/?trigger_analysis=false`;
+
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.newJobAnalysis)
+                        });
+
+                        if (res.ok) {
+                            if (triggerAnalysis) {
+                                alert('✅ 保存成功！AI分析已在后台启动，您可以继续其他操作。');
+                            } else {
+                                alert('✅ 保存成功！');
+                            }
+                            this.newJobAnalysis = { job_title: '', company_name: '', jd_content: '' };
+                            await this.loadJobAnalyses();
+                        } else {
+                            alert('提交失败');
+                        }
+                    } catch (error) {
+                        alert('提交失败: ' + error.message);
+                    } finally {
+                        this.analyzingJob = false;
+                    }
+                },
+
+                async triggerAnalysis(analysisId) {
+                    try {
+                        const res = await fetch(`${API_BASE}/job-analysis/${analysisId}/analyze`, {
+                            method: 'POST'
+                        });
+
+                        if (res.ok) {
+                            alert('✅ AI分析已启动，正在后台处理...');
+                            // 立即刷新列表，显示processing状态
+                            await this.loadJobAnalyses();
+                        } else {
+                            const data = await res.json();
+                            alert('启动分析失败: ' + (data.detail || '未知错误'));
+                        }
+                    } catch (error) {
+                        alert('启动分析失败: ' + error.message);
+                    }
+                },
+
+                async deleteJobAnalysis(analysisId) {
+                    if (!confirm('确定要删除这条岗位分析吗？')) return;
+
+                    try {
+                        const res = await fetch(`${API_BASE}/job-analysis/${analysisId}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            alert('删除成功！');
+                            await this.loadJobAnalyses();
+                        }
+                    } catch (error) {
+                        alert('删除失败: ' + error.message);
+                    }
+                },
+
+                // ========== Chatbot AI助手 ==========
+                startNewChat() {
+                    // 生成会话名称（使用时间戳）
+                    const now = new Date();
+                    const sessionName = `对话 ${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+                    // 创建新会话
+                    const newSession = {
+                        sessionId: 'session-' + Date.now(),
+                        sessionName: sessionName,
+                        messages: [],
+                        debugHistory: [],
+                        debugCurrentTab: 0,
+                        createdAt: now.toISOString()
+                    };
+
+                    // 添加到会话列表
+                    this.chatSessions.push(newSession);
+                    // 切换到新会话
+                    this.currentChatSessionIndex = this.chatSessions.length - 1;
+                    this.chatInput = '';
+                },
+
+                switchToSession(index) {
+                    this.currentChatSessionIndex = index;
+                },
+
+                deleteSession(index) {
+                    if (!confirm('确定要删除这个对话吗？')) {
+                        return;
+                    }
+                    this.chatSessions.splice(index, 1);
+                    // 如果删除的是当前会话，切换到最后一个会话
+                    if (this.currentChatSessionIndex >= this.chatSessions.length) {
+                        this.currentChatSessionIndex = this.chatSessions.length - 1;
+                    }
+                    // 如果没有会话了，创建一个新会话
+                    if (this.chatSessions.length === 0) {
+                        this.startNewChat();
+                    }
+                },
+
+                async sendChatMessage() {
+                    if (!this.chatInput.trim() || this.chatStreaming || !this.currentSession) {
+                        return;
+                    }
+
+                    const userMessage = this.chatInput.trim();
+
+                    // 添加用户消息到当前会话
+                    this.currentSession.messages.push({
+                        role: 'user',
+                        content: userMessage,
+                        timestamp: new Date()
+                    });
+
+                    // 清空输入框
+                    this.chatInput = '';
+
+                    // 滚动到底部
+                    this.$nextTick(() => {
+                        const chatContainer = document.getElementById('chatMessages');
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    });
+
+                    // 开始流式接收
+                    this.chatStreaming = true;
+
+                    try {
+                        // 构建请求数据
+                        const requestData = {
+                            session_id: this.currentSession.sessionId,
+                            message: userMessage,
+                            use_rag: this.chatUseRag,
+                            model: this.chatModel || null,
+                            dev_mode: this.chatDevMode,
+                            enable_search: this.chatEnableSearch
+                        };
+
+                        // 使用EventSource接收SSE流
+                        const url = `${API_BASE}/chat/stream`;
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(requestData)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+
+                        // 添加AI消息占位符到当前会话
+                        const messageIndex = this.currentSession.messages.length;
+                        this.currentSession.messages.push({
+                            role: 'assistant',
+                            content: '',
+                            timestamp: new Date()
+                        });
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+
+                            if (done) {
+                                break;
+                            }
+
+                            // 解码chunk
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n');
+
+                            for (const line of lines) {
+                                if (!line.trim()) {
+                                    continue;
+                                }
+
+                                // 检查是否是data:开头
+                                if (!line.startsWith('data: ')) {
+                                    continue;
+                                }
+
+                                const data = line.slice(6); // 移除 "data: " 前缀
+
+                                if (data === '[DONE]') {
+                                    console.log('收到[DONE]信号');
+                                    break;
+                                }
+
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    console.log('收到chunk:', parsed);
+
+                                    // 处理错误
+                                    if (parsed.type === 'error') {
+                                        throw new Error(parsed.error);
+                                    }
+
+                                    // 处理调试信息（开发者模式）
+                                    if (parsed.id === 'debug' && parsed.choices && parsed.choices[0].delta.content) {
+                                        try {
+                                            const debugInfo = JSON.parse(parsed.choices[0].delta.content);
+                                            // 添加到当前会话的调试历史
+                                            this.currentSession.debugHistory.push(debugInfo);
+                                            // 自动切换到最新的tab
+                                            this.currentSession.debugCurrentTab = this.currentSession.debugHistory.length - 1;
+                                            console.log(`📊 Debug Info Round ${this.currentSession.debugHistory.length}:`, debugInfo);
+                                        } catch (e) {
+                                            console.error('Failed to parse debug info:', e);
+                                        }
+                                        continue; // 跳过这个chunk，不添加到消息中
+                                    }
+
+                                    // 提取增量内容
+                                    if (parsed.choices && parsed.choices.length > 0) {
+                                        const delta = parsed.choices[0].delta;
+                                        if (delta && delta.content) {
+                                            // 直接修改当前会话的消息，触发Alpine响应式更新
+                                            this.currentSession.messages[messageIndex].content += delta.content;
+                                            console.log('累积内容长度:', this.currentSession.messages[messageIndex].content.length);
+
+                                            // 滚动到底部
+                                            this.$nextTick(() => {
+                                                const chatContainer = document.getElementById('chatMessages');
+                                                if (chatContainer) {
+                                                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                                                }
+                                            });
+                                        }
+                                    }
+                                } catch (parseError) {
+                                    console.error('解析错误:', parseError, 'Data:', data);
+                                }
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error('Chat error:', error);
+                        alert('发送失败: ' + error.message);
+
+                        // 移除未完成的AI消息
+                        if (this.currentSession && this.currentSession.messages.length > 0 &&
+                            this.currentSession.messages[this.currentSession.messages.length - 1].role === 'assistant') {
+                            this.currentSession.messages.pop();
+                        }
+                    } finally {
+                        this.chatStreaming = false;
+
+                        // 滚动到底部
+                        this.$nextTick(() => {
+                            const chatContainer = document.getElementById('chatMessages');
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                        });
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
