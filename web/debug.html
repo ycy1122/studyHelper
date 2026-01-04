@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>调试工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div x-data="{ currentTab: 'practice' }">
+        <h1 class="text-2xl font-bold mb-4">页面诊断工具</h1>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">当前标签页状态</h2>
+            <p class="mb-2">当前选中: <strong x-text="currentTab"></strong></p>
+
+            <div class="flex gap-2 mb-4">
+                <button @click="currentTab = 'practice'" class="px-4 py-2 bg-blue-500 text-white rounded">练习</button>
+                <button @click="currentTab = 'chatbot'" class="px-4 py-2 bg-blue-500 text-white rounded">聊天</button>
+                <button @click="currentTab = 'schedules'" class="px-4 py-2 bg-blue-500 text-white rounded">面试日程</button>
+                <button @click="currentTab = 'job-analysis'" class="px-4 py-2 bg-blue-500 text-white rounded">岗位分析</button>
+            </div>
+
+            <div class="space-y-2">
+                <div x-show="currentTab === 'practice'" class="p-4 bg-green-100 border border-green-300 rounded">
+                    ✓ 练习页面显示正常
+                </div>
+                <div x-show="currentTab === 'chatbot'" class="p-4 bg-green-100 border border-green-300 rounded">
+                    ✓ 聊天页面显示正常
+                </div>
+                <div x-show="currentTab === 'schedules'" class="p-4 bg-green-100 border border-green-300 rounded">
+                    ✓ 面试日程页面显示正常
+                </div>
+                <div x-show="currentTab === 'job-analysis'" class="p-4 bg-green-100 border border-green-300 rounded">
+                    ✓ 岗位分析页面显示正常
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">API测试</h2>
+            <button @click="testAPIs()" class="px-4 py-2 bg-green-500 text-white rounded mb-4">测试所有API</button>
+            <pre id="apiResults" class="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function testAPIs() {
+            const results = document.getElementById('apiResults');
+            results.textContent = '测试中...\n\n';
+
+            const apis = [
+                '/api/schedules/',
+                '/api/job-analysis/',
+                '/api/questions/',
+                '/api/notes/'
+            ];
+
+            for (const api of apis) {
+                try {
+                    const res = await fetch(`http://localhost:8000${api}`);
+                    const data = await res.json();
+                    results.textContent += `✓ ${api}\n  状态: ${res.status}\n  数据量: ${Array.isArray(data) ? data.length : 'N/A'} 条\n\n`;
+                } catch (error) {
+                    results.textContent += `✗ ${api}\n  错误: ${error.message}\n\n`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

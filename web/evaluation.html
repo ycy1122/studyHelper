@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG评估与监控系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div x-data="evaluationApp()" x-init="init()" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold">🔬 RAG评估与监控系统</h1>
+                        <p class="text-blue-100 text-sm mt-1">Chatbot Quality Assurance & A/B Testing Platform</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <a href="index.html" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition">
+                            返回主界面
+                        </a>
+                        <button @click="refreshData()" class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition">
+                            🔄 刷新数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container mx-auto px-6 py-8">
+            <!-- Navigation Tabs -->
+            <div class="bg-white rounded-lg shadow-md mb-6">
+                <div class="flex border-b">
+                    <button @click="activeTab = 'overview'"
+                            :class="activeTab === 'overview' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
+                            class="px-6 py-3 font-semibold transition">
+                        📊 概览
+                    </button>
+                    <button @click="activeTab = 'standard-tests'"
+                            :class="activeTab === 'standard-tests' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
+                            class="px-6 py-3 font-semibold transition">
+                        📝 标准测试
+                    </button>
+                    <button @click="activeTab = 'abtest'"
+                            :class="activeTab === 'abtest' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
+                            class="px-6 py-3 font-semibold transition">
+                        🧪 A/B测试
+                    </button>
+                    <button @click="activeTab = 'metrics'"
+                            :class="activeTab === 'metrics' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
+                            class="px-6 py-3 font-semibold transition">
+                        📈 指标分析
+                    </button>
+                    <button @click="activeTab = 'config'"
+                            :class="activeTab === 'config' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
+                            class="px-6 py-3 font-semibold transition">
+                        ⚙️ 配置管理
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Tab -->
+            <div x-show="activeTab === 'overview'" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Metric Cards -->
+                    <div class="metric-card bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">总测试次数</p>
+                                <p class="text-3xl font-bold text-blue-600" x-text="overview.totalTests">0</p>
+                            </div>
+                            <div class="text-4xl">📊</div>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">平均准确率</p>
+                                <p class="text-3xl font-bold text-green-600" x-text="overview.avgAccuracy + '%'">0%</p>
+                            </div>
+                            <div class="text-4xl">✅</div>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">运行中的A/B测试</p>
+                                <p class="text-3xl font-bold text-purple-600" x-text="overview.activeABTests">0</p>
+                            </div>
+                            <div class="text-4xl">🧪</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Tests -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">📋 最近测试记录</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">时间</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">配置</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">准确率</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">平均响应时间</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="test in recentTests" :key="test.id">
+                                    <tr class="border-t hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-sm" x-text="test.timestamp"></td>
+                                        <td class="px-4 py-3 text-sm" x-text="test.config"></td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span :class="test.accuracy >= 80 ? 'text-green-600' : test.accuracy >= 60 ? 'text-yellow-600' : 'text-red-600'"
+                                                  x-text="test.accuracy + '%'"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm" x-text="test.avgResponseTime + 'ms'"></td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span :class="test.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                                                  class="px-2 py-1 rounded text-xs"
+                                                  x-text="test.status"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Tests Tab -->
+            <div x-show="activeTab === 'standard-tests'" class="space-y-6">
+                <!-- Test Configuration -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">⚙️ 测试配置</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">模型选择</label>
+                            <select x-model="testConfig.model" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="qwen3-max">Qwen3-Max</option>
+                                <option value="auto">Auto (自动选择)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Query改写策略</label>
+                            <select x-model="testConfig.queryStrategy" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="multi-version">多版本（3个）</option>
+                                <option value="single">单版本</option>
+                                <option value="none">不改写</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">检索方法</label>
+                            <select x-model="testConfig.retrievalMethod" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="hybrid">混合（向量+BM25）</option>
+                                <option value="vector-only">仅向量</option>
+                                <option value="bm25-only">仅BM25</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Rerank方法</label>
+                            <select x-model="testConfig.rerankMethod" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="rrf">RRF融合</option>
+                                <option value="bm25">BM25重排</option>
+                                <option value="none">不重排</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standard Questions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">📝 标准测试问题（5题）</h3>
+                    <div class="space-y-4">
+                        <template x-for="(question, idx) in standardQuestions" :key="idx">
+                            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                                        <span x-text="idx + 1"></span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-800 mb-2" x-text="question.question"></p>
+                                        <div class="bg-green-50 border-l-4 border-green-500 p-3 text-sm">
+                                            <p class="text-gray-600 font-semibold mb-1">✓ 标准答案:</p>
+                                            <p class="text-gray-800" x-text="question.groundTruth"></p>
+                                        </div>
+                                        <div x-show="question.lastResult" class="mt-3 bg-blue-50 border-l-4 border-blue-500 p-3 text-sm">
+                                            <p class="text-gray-600 font-semibold mb-1">🤖 最近生成答案:</p>
+                                            <p class="text-gray-800" x-text="question.lastResult?.answer"></p>
+                                            <div class="mt-2 flex gap-4 text-xs">
+                                                <span class="font-semibold">得分: <span :class="question.lastResult?.score >= 0.8 ? 'text-green-600' : 'text-yellow-600'" x-text="(question.lastResult?.score * 100).toFixed(1) + '%'"></span></span>
+                                                <span class="text-gray-600">响应时间: <span x-text="question.lastResult?.responseTime + 'ms'"></span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Run Tests Button -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <button @click="runStandardTests()"
+                            :disabled="isRunning"
+                            :class="isRunning ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+                            class="w-full py-3 text-white font-bold rounded-lg transition">
+                        <span x-show="!isRunning">🚀 运行标准测试</span>
+                        <span x-show="isRunning">⏳ 测试运行中... (<span x-text="testProgress"></span>/5)</span>
+                    </button>
+                </div>
+
+                <!-- Test Results -->
+                <div x-show="testResults.length > 0" class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">📊 测试结果</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-4">
+                            <p class="text-sm opacity-90">总体得分</p>
+                            <p class="text-2xl font-bold" x-text="(testResults.reduce((sum, r) => sum + r.score, 0) / testResults.length * 100).toFixed(1) + '%'"></p>
+                        </div>
+                        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-4">
+                            <p class="text-sm opacity-90">通过率 (≥80%)</p>
+                            <p class="text-2xl font-bold" x-text="(testResults.filter(r => r.score >= 0.8).length / testResults.length * 100).toFixed(0) + '%'"></p>
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-4">
+                            <p class="text-sm opacity-90">平均响应时间</p>
+                            <p class="text-2xl font-bold" x-text="(testResults.reduce((sum, r) => sum + r.responseTime, 0) / testResults.length).toFixed(0) + 'ms'"></p>
+                        </div>
+                        <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4">
+                            <p class="text-sm opacity-90">召回准确率</p>
+                            <p class="text-2xl font-bold" x-text="(testResults.filter(r => r.hasRelevantDocs).length / testResults.length * 100).toFixed(0) + '%'"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- A/B Test Tab -->
+            <div x-show="activeTab === 'abtest'" class="space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">🧪 创建A/B测试</h3>
+                    <p class="text-gray-600 text-sm mb-4">比较两种不同配置的性能表现</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Configuration A -->
+                        <div class="border-2 border-blue-200 rounded-lg p-4">
+                            <h4 class="font-bold text-blue-600 mb-3">配置 A (对照组)</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1">模型</label>
+                                    <select x-model="abtestConfigA.model" class="w-full px-3 py-2 border rounded">
+                                        <option value="qwen3-max">Qwen3-Max</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1">Query改写</label>
+                                    <select x-model="abtestConfigA.queryStrategy" class="w-full px-3 py-2 border rounded">
+                                        <option value="multi-version">多版本</option>
+                                        <option value="single">单版本</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1">检索方法</label>
+                                    <select x-model="abtestConfigA.retrievalMethod" class="w-full px-3 py-2 border rounded">
+                                        <option value="hybrid">混合</option>
+                                        <option value="vector-only">仅向量</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuration B -->
+                        <div class="border-2 border-green-200 rounded-lg p-4">
+                            <h4 class="font-bold text-green-600 mb-3">配置 B (实验组)</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1">模型</label>
+                                    <select x-model="abtestConfigB.model" class="w-full px-3 py-2 border rounded">
+                                        <option value="qwen3-max">Qwen3-Max</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1">Query改写</label>
+                                    <select x-model="abtestConfigB.queryStrategy" class="w-full px-3 py-2 border rounded">
+                                        <option value="multi-version">多版本</option>
+                                        <option value="single">单版本</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1">检索方法</label>
+                                    <select x-model="abtestConfigB.retrievalMethod" class="w-full px-3 py-2 border rounded">
+                                        <option value="hybrid">混合</option>
+                                        <option value="vector-only">仅向量</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button @click="runABTest()" class="mt-6 w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition">
+                        🚀 启动A/B测试
+                    </button>
+                </div>
+
+                <!-- A/B Test Results -->
+                <div x-show="abtestResults" class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">📊 A/B测试结果对比</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold">指标</th>
+                                    <th class="px-4 py-2 text-center text-sm font-semibold text-blue-600">配置 A</th>
+                                    <th class="px-4 py-2 text-center text-sm font-semibold text-green-600">配置 B</th>
+                                    <th class="px-4 py-2 text-center text-sm font-semibold">差异</th>
+                                </tr>
+                            </thead>
+                            <tbody x-show="abtestResults">
+                                <tr class="border-t">
+                                    <td class="px-4 py-3 font-semibold">平均准确率</td>
+                                    <td class="px-4 py-3 text-center" x-text="abtestResults?.configA?.accuracy + '%'"></td>
+                                    <td class="px-4 py-3 text-center" x-text="abtestResults?.configB?.accuracy + '%'"></td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span :class="abtestResults?.configB?.accuracy > abtestResults?.configA?.accuracy ? 'text-green-600' : 'text-red-600'"
+                                              x-text="(abtestResults?.configB?.accuracy - abtestResults?.configA?.accuracy > 0 ? '+' : '') + (abtestResults?.configB?.accuracy - abtestResults?.configA?.accuracy).toFixed(1) + '%'"></span>
+                                    </td>
+                                </tr>
+                                <tr class="border-t">
+                                    <td class="px-4 py-3 font-semibold">平均响应时间</td>
+                                    <td class="px-4 py-3 text-center" x-text="abtestResults?.configA?.avgResponseTime + 'ms'"></td>
+                                    <td class="px-4 py-3 text-center" x-text="abtestResults?.configB?.avgResponseTime + 'ms'"></td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span :class="abtestResults?.configB?.avgResponseTime < abtestResults?.configA?.avgResponseTime ? 'text-green-600' : 'text-red-600'"
+                                              x-text="(abtestResults?.configB?.avgResponseTime - abtestResults?.configA?.avgResponseTime > 0 ? '+' : '') + (abtestResults?.configB?.avgResponseTime - abtestResults?.configA?.avgResponseTime).toFixed(0) + 'ms'"></span>
+                                    </td>
+                                </tr>
+                                <tr class="border-t">
+                                    <td class="px-4 py-3 font-semibold">召回准确率</td>
+                                    <td class="px-4 py-3 text-center" x-text="abtestResults?.configA?.recallAccuracy + '%'"></td>
+                                    <td class="px-4 py-3 text-center" x-text="abtestResults?.configB?.recallAccuracy + '%'"></td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span :class="abtestResults?.configB?.recallAccuracy > abtestResults?.configA?.recallAccuracy ? 'text-green-600' : 'text-red-600'"
+                                              x-text="(abtestResults?.configB?.recallAccuracy - abtestResults?.configA?.recallAccuracy > 0 ? '+' : '') + (abtestResults?.configB?.recallAccuracy - abtestResults?.configA?.recallAccuracy).toFixed(1) + '%'"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Tab -->
+            <div x-show="activeTab === 'metrics'" class="space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">📈 性能指标趋势</h3>
+                    <p class="text-gray-600 text-sm">此功能将展示历史测试数据的趋势图表（待实现图表库）</p>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div x-show="activeTab === 'config'" class="space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold mb-4">⚙️ 系统配置</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">API基础URL</label>
+                            <input type="text" x-model="config.apiBaseUrl" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">默认会话ID</label>
+                            <input type="text" x-model="config.sessionId" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <button @click="saveConfig()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                            💾 保存配置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function evaluationApp() {
+            return {
+                activeTab: 'overview',
+
+                // Overview data
+                overview: {
+                    totalTests: 0,
+                    avgAccuracy: 0,
+                    activeABTests: 0
+                },
+
+                recentTests: [],
+
+                // Test configuration
+                testConfig: {
+                    model: 'qwen3-max',
+                    queryStrategy: 'multi-version',
+                    retrievalMethod: 'hybrid',
+                    rerankMethod: 'rrf'
+                },
+
+                // Standard questions with ground truth
+                standardQuestions: [
+                    {
+                        question: "什么是RAG（检索增强生成）？它有什么优势？",
+                        groundTruth: "RAG是一种结合了信息检索和生成式AI的技术。它首先从知识库中检索相关文档，然后基于检索到的内容生成回答。主要优势包括：1）减少幻觉，提高准确性；2）能够利用最新的外部知识；3）可以提供来源引用；4）无需重新训练模型就能更新知识。",
+                        lastResult: null
+                    },
+                    {
+                        question: "BM25算法的工作原理是什么？",
+                        groundTruth: "BM25是一种基于词频的信息检索算法。它通过以下因素计算相关性得分：1）词频TF（Term Frequency）：词在文档中出现的频率，使用饱和函数避免过度奖励高频词；2）逆文档频率IDF（Inverse Document Frequency）：词的稀有程度，稀有词权重更高；3）文档长度归一化：较长文档不会获得不公平的优势。公式核心参数包括k1（控制TF饱和度）和b（控制长度归一化）。",
+                        lastResult: null
+                    },
+                    {
+                        question: "向量检索和关键词检索各有什么优缺点？",
+                        groundTruth: "向量检索优点：能捕捉语义相似性，对同义词和改写鲁棒，适合语义理解任务。缺点：计算成本高，对精确匹配支持弱。关键词检索（如BM25）优点：速度快，精确匹配效果好，可解释性强。缺点：无法理解语义，对同义词和改写敏感。最佳实践是混合检索（Hybrid Search），结合两者优势。",
+                        lastResult: null
+                    },
+                    {
+                        question: "什么是RRF（倒数排名融合），如何使用？",
+                        groundTruth: "RRF是一种简单有效的结果融合方法。对于文档d，RRF得分 = Σ 1/(k + rank_i)，其中rank_i是文档在第i个排序列表中的排名，k是平滑参数（通常取60）。RRF的优点：1）不需要归一化分数；2）对不同检索系统的分数尺度不敏感；3）实现简单但效果好。常用于混合检索中融合向量检索和BM25的结果。",
+                        lastResult: null
+                    },
+                    {
+                        question: "Query改写在RAG中的作用是什么？如何实现？",
+                        groundTruth: "Query改写是将用户原始问题转换为更适合检索的形式，以提高召回率和准确性。作用包括：1）展开缩写词和简称；2）补充上下文信息；3）生成多个检索视角。实现方法：1）基于规则的改写；2）使用LLM生成改写版本；3）生成多个版本（扩展版、关键词版、同义词版）并分别检索后融合结果。多版本改写可以覆盖不同的检索需求，提升整体召回效果。",
+                        lastResult: null
+                    }
+                ],
+
+                testResults: [],
+                isRunning: false,
+                testProgress: 0,
+
+                // A/B test config
+                abtestConfigA: {
+                    model: 'qwen3-max',
+                    queryStrategy: 'multi-version',
+                    retrievalMethod: 'hybrid'
+                },
+                abtestConfigB: {
+                    model: 'qwen3-max',
+                    queryStrategy: 'single',
+                    retrievalMethod: 'vector-only'
+                },
+                abtestResults: null,
+
+                // System config
+                config: {
+                    apiBaseUrl: 'http://localhost:8000',
+                    sessionId: 'eval-session-001'
+                },
+
+                init() {
+                    console.log('Evaluation system initialized');
+                    this.loadMockData();
+                },
+
+                loadMockData() {
+                    // Mock data for demonstration
+                    this.overview = {
+                        totalTests: 12,
+                        avgAccuracy: 78.5,
+                        activeABTests: 2
+                    };
+
+                    this.recentTests = [
+                        {
+                            id: 1,
+                            timestamp: '2026-01-01 14:30',
+                            config: '多版本Query + 混合检索',
+                            accuracy: 85.2,
+                            avgResponseTime: 1250,
+                            status: 'completed'
+                        },
+                        {
+                            id: 2,
+                            timestamp: '2026-01-01 13:15',
+                            config: '单版本Query + 向量检索',
+                            accuracy: 72.8,
+                            avgResponseTime: 980,
+                            status: 'completed'
+                        }
+                    ];
+                },
+
+                async runStandardTests() {
+                    this.isRunning = true;
+                    this.testResults = [];
+                    this.testProgress = 0;
+
+                    try {
+                        // Call backend API to run all standard tests
+                        const response = await fetch(`${this.config.apiBaseUrl}/api/evaluation/run-standard-test`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model: this.testConfig.model,
+                                query_strategy: this.testConfig.queryStrategy,
+                                retrieval_method: this.testConfig.retrievalMethod,
+                                rerank_method: this.testConfig.rerankMethod,
+                                use_rag: true
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`API returned ${response.status}`);
+                        }
+
+                        const results = await response.json();
+
+                        // Update UI with results
+                        this.testResults = results.map(r => ({
+                            question: r.question,
+                            answer: r.answer,
+                            groundTruth: r.ground_truth,
+                            score: r.score,
+                            responseTime: r.response_time,
+                            hasRelevantDocs: r.has_relevant_docs,
+                            ragDocumentsCount: r.rag_documents_count
+                        }));
+
+                        // Update last results for each question
+                        results.forEach((result, idx) => {
+                            if (this.standardQuestions[idx]) {
+                                this.standardQuestions[idx].lastResult = {
+                                    answer: result.answer,
+                                    score: result.score,
+                                    responseTime: result.response_time
+                                };
+                            }
+                        });
+
+                        alert('✅ 标准测试完成！');
+                    } catch (error) {
+                        console.error('Test failed:', error);
+                        alert('❌ 测试失败: ' + error.message);
+                    } finally {
+                        this.isRunning = false;
+                    }
+                },
+
+                async runABTest() {
+                    if (!confirm('🧪 确定要运行A/B测试吗？这将运行2组测试，每组5个问题，可能需要几分钟。')) {
+                        return;
+                    }
+
+                    this.isRunning = true;
+
+                    try {
+                        const response = await fetch(`${this.config.apiBaseUrl}/api/evaluation/run-abtest`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                config_a: {
+                                    model: this.abtestConfigA.model,
+                                    query_strategy: this.abtestConfigA.queryStrategy,
+                                    retrieval_method: this.abtestConfigA.retrievalMethod,
+                                    rerank_method: 'rrf',
+                                    use_rag: true
+                                },
+                                config_b: {
+                                    model: this.abtestConfigB.model,
+                                    query_strategy: this.abtestConfigB.queryStrategy,
+                                    retrieval_method: this.abtestConfigB.retrievalMethod,
+                                    rerank_method: 'rrf',
+                                    use_rag: true
+                                },
+                                test_questions: [1, 2, 3, 4, 5]
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`API returned ${response.status}`);
+                        }
+
+                        const result = await response.json();
+
+                        this.abtestResults = {
+                            configA: {
+                                accuracy: result.config_a_results.accuracy,
+                                avgResponseTime: result.config_a_results.avg_response_time,
+                                recallAccuracy: result.config_a_results.recall_accuracy
+                            },
+                            configB: {
+                                accuracy: result.config_b_results.accuracy,
+                                avgResponseTime: result.config_b_results.avg_response_time,
+                                recallAccuracy: result.config_b_results.recall_accuracy
+                            }
+                        };
+
+                        const winnerMsg = result.winner === 'A' ? '配置A获胜！' :
+                                         result.winner === 'B' ? '配置B获胜！' :
+                                         '两者表现相当！';
+                        alert(`✅ A/B测试完成！${winnerMsg}`);
+                    } catch (error) {
+                        console.error('A/B test failed:', error);
+                        alert('❌ A/B测试失败: ' + error.message);
+                    } finally {
+                        this.isRunning = false;
+                    }
+                },
+
+                refreshData() {
+                    this.loadMockData();
+                    alert('🔄 数据已刷新');
+                },
+
+                saveConfig() {
+                    localStorage.setItem('evalConfig', JSON.stringify(this.config));
+                    alert('💾 配置已保存');
+                }
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+# ============================================================================
+# 换行符统一规则
+# ============================================================================
+# 默认：所有文本文件统一使用 LF（Unix 风格）
+* text=auto eol=lf
+
+# ============================================================================
+# Windows 特定文件：使用 CRLF
+# ============================================================================
+# Windows 批处理脚本
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# ============================================================================
+# 源代码文件：强制使用 LF
+# ============================================================================
+# Python
+*.py text eol=lf
+*.pyw text eol=lf
+*.pyi text eol=lf
+
+# Web 前端
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.jsx text eol=lf
+
+# 配置文件
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.conf text eol=lf
+*.config text eol=lf
+
+# 数据库脚本
+*.sql text eol=lf
+
+# Shell 脚本（Linux/Mac）
+*.sh text eol=lf
+*.bash text eol=lf
+
+# ============================================================================
+# 文档文件：使用 LF
+# ============================================================================
+*.md text eol=lf
+*.txt text eol=lf
+*.rst text eol=lf
+*.adoc text eol=lf
+
+# ============================================================================
+# Git 相关文件
+# ============================================================================
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf
+
+# ============================================================================
+# 二进制文件：不进行换行符转换
+# ============================================================================
+# 图片
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.webp binary
+
+# 压缩文件
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+*.rar binary
+
+# 可执行文件
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# 数据库文件
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# 字体文件
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# 其他二进制
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+
