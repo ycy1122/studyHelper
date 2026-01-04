@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(py:*)",
+      "Bash(move config.py questionExtract )",
+      "Bash(move question_parser.py questionExtract )",
+      "Bash(move process_questions.py questionExtract )",
+      "Bash(move query_questions.py questionExtract )",
+      "Bash(move example_usage.py questionExtract )",
+      "Bash(move check_excel.py questionExtract )",
+      "Bash(move requirements.txt questionExtract )",
+      "Bash(move README.md questionExtract )",
+      "Bash(move db_schema.sql questionExtract)",
+      "Bash(ls:*)",
+      "Bash(timeout 3 bash:*)",
+      "Bash(curl:*)",
+      "Bash(ping:*)",
+      "Bash(timeout 5 curl:*)",
+      "Bash(set NO_PROXY=localhost,127.0.0.1)",
+      "Bash(timeout 3 echo:*)",
+      "Bash(set NO_PROXY=*)",
+      "Bash(set)",
+      "Bash(findstr:*)",
+      "Bash(timeout 3 curl:*)",
+      "Bash(tasklist:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(schtasks /query /FO LIST)",
+      "Bash(timeout:*)",
+      "Bash(start /B py main.py)",
+      "Bash(pip install:*)",
+      "Bash(move:*)",
+      "Bash(dir:*)"
+    ]
+  }
+}
